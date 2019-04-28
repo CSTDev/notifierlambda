@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/cstdev/lambdahelpers/pkg/notification"
 	"github.com/cstdev/notifierlambda/pkg/scraper"
 	log "github.com/sirupsen/logrus"
@@ -19,7 +20,32 @@ func handleRequest() (string, error) {
 		return "", errors.New("REGION environment variable must be set")
 	}
 
-	_, err := session.NewSession(&aws.Config{
+	url := os.Getenv("URL")
+	if url == "" {
+		return "", errors.New("URL environment variable must be set")
+	}
+
+	searchText := os.Getenv("SEARCH_TEXT")
+	if searchText == "" {
+		return "", errors.New("SEARCH_TEXT environment variable must be set")
+	}
+
+	phoneNumber := os.Getenv("PHONE_NUMBER")
+	if phoneNumber == "" {
+		return "", errors.New("PRHONE_NUMBER environment variable must be set")
+	}
+
+	result, _ := scraper.FindText(url, searchText)
+	log.WithFields(log.Fields{
+		"result": result,
+	}).Info("Search result")
+
+	if result {
+		log.Debug("Found text, returning.")
+		return "Text found", nil
+	}
+
+	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	})
 
@@ -28,11 +54,19 @@ func handleRequest() (string, error) {
 		return "", err
 	}
 
-	notification.SendMessage("TEXT", "NUMBER")
+	sms := notification.SMS{
+		Client: sns.New(sess),
+	}
 
-	scraper.FindText("URL", "TEXT")
+	err = sms.SendMessage(searchText+" Not Found", phoneNumber)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Failed to send text")
+		return "", err
+	}
 
-	return "", nil
+	return "Message sent", nil
 }
 
 func main() {

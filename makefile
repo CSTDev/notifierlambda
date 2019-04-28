@@ -34,7 +34,7 @@ build-notifier:
 	$(MAKE) build BINARY_NAME=notifierlambda
 
 clean: 
-	rm *.exe *.zip readsend receivehugoemail hugolambda
+	rm *.exe *.zip notifierlambda
 
 check-binary:
 ifndef BINARY_NAME
