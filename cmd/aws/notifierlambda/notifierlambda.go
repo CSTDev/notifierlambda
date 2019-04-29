@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -12,27 +13,27 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func handleRequest() (string, error) {
+func handleRequest() error {
 	log.Info("Handling request")
 
 	region := os.Getenv("REGION")
 	if region == "" {
-		return "", errors.New("REGION environment variable must be set")
+		return errors.New("REGION environment variable must be set")
 	}
 
 	url := os.Getenv("URL")
 	if url == "" {
-		return "", errors.New("URL environment variable must be set")
+		return errors.New("URL environment variable must be set")
 	}
 
 	searchText := os.Getenv("SEARCH_TEXT")
 	if searchText == "" {
-		return "", errors.New("SEARCH_TEXT environment variable must be set")
+		return errors.New("SEARCH_TEXT environment variable must be set")
 	}
 
 	phoneNumber := os.Getenv("PHONE_NUMBER")
 	if phoneNumber == "" {
-		return "", errors.New("PRHONE_NUMBER environment variable must be set")
+		return errors.New("PRHONE_NUMBER environment variable must be set")
 	}
 
 	result, _ := scraper.FindText(url, searchText)
@@ -41,8 +42,8 @@ func handleRequest() (string, error) {
 	}).Info("Search result")
 
 	if result {
-		log.Debug("Found text, returning.")
-		return "Text found", nil
+		log.Info("Found text, returning.")
+		return nil
 	}
 
 	sess, err := session.NewSession(&aws.Config{
@@ -51,7 +52,7 @@ func handleRequest() (string, error) {
 
 	if err != nil {
 		log.Error("Failed to create session")
-		return "", err
+		return err
 	}
 
 	sms := notification.SMS{
@@ -63,10 +64,10 @@ func handleRequest() (string, error) {
 		log.WithFields(log.Fields{
 			"error": err,
 		}).Error("Failed to send text")
-		return "", err
+		return err
 	}
 
-	return "Message sent", nil
+	return nil
 }
 
 func main() {
@@ -79,6 +80,6 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 	log.Info("Notifier")
-	//lambda.Start(handleRequest)
-	handleRequest()
+	lambda.Start(handleRequest)
+	// handleRequest()
 }
