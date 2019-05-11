@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,13 +37,25 @@ func handleRequest() error {
 		return errors.New("PRHONE_NUMBER environment variable must be set")
 	}
 
-	result, _ := scraper.FindText(url, searchText)
+	alertIfPresent := getEnvBool("ALERT_IF_PRESENT")
+
+	found, err := scraper.FindText(url, searchText)
+	if err != nil {
+		log.Error("Failed to search site")
+		return err
+	}
+
 	log.WithFields(log.Fields{
-		"result": result,
+		"result": found,
 	}).Info("Search result")
 
-	if result {
-		log.Info("Found text, returning.")
+	if !found && alertIfPresent {
+		log.Info("Not found and should alert only if it found it")
+		return nil
+	}
+
+	if found && !alertIfPresent {
+		log.Info("Found it and should only alert if it doesn't")
 		return nil
 	}
 
@@ -82,4 +95,17 @@ func main() {
 	log.Info("Notifier")
 	lambda.Start(handleRequest)
 	// handleRequest()
+}
+
+func getEnvBool(key string) bool {
+	s := os.Getenv(key)
+	if s == "" {
+		return false
+	}
+
+	v, err := strconv.ParseBool(s)
+	if err != nil {
+		return false
+	}
+	return v
 }
