@@ -72,7 +72,7 @@ func handleRequest() error {
 		Client: sns.New(sess),
 	}
 
-	err = sms.SendMessage(searchText+" Not Found", phoneNumber)
+	err = sms.SendMessage(searchText+" present state changed", phoneNumber)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
