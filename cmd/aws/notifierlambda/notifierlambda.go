@@ -94,7 +94,7 @@ func main() {
 	}
 	log.Info("Notifier")
 	lambda.Start(handleRequest)
-	// handleRequest()
+	//handleRequest()
 }
 
 func getEnvBool(key string) bool {
