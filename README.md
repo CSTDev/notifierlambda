@@ -32,10 +32,10 @@ lambda.Start(handleRequest)
 ```
 or wrapped up as a zip and deployed to AWS
 
-It requires the following environment variables to be set:
-REGION - AWS region
-URL - Web URL to search for text
-SEARCH_TEXT - Text to be searched for
-PHONE_NUMBER - Phone number to send the SMS message to
-ALERT_IF_PRESENT - (optional) true if you want to alert if a page has text
-                                false if you want to alert if text is not present
+It requires the following environment variables to be set:</br>
+REGION - AWS region</br>
+URL - Web URL to search for text</br>
+SEARCH_TEXT - Text to be searched for</br>
+PHONE_NUMBER - Phone number to send the SMS message to</br>
+ALERT_IF_PRESENT - (optional) true if you want to alert if a page has text</br>
+                                false if you want to alert if text is not present</br>
